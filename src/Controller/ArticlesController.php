@@ -189,10 +189,18 @@ class ArticlesController extends AppController
 
 			// ファイル名の生成
 			//$uploadFile = $file["name"] . "." . $ext;
-			$uploadFile = sha1_file($file["tmp_name"]) . "." . $ext;
+			$this->log("==============================", LOG_DEBUG);
+			$this->log($file, LOG_DEBUG);
+			$this->log("==============================", LOG_DEBUG);
+			$uploadFile = $file['name'];
+			$this->log($uploadFile, LOG_DEBUG);
+			$this->log("==============================", LOG_DEBUG);
+			$this->log($dir, LOG_DEBUG);
+			$this->log("==============================", LOG_DEBUG);
+			$this->log($dir . "/" . $uploadFile, LOG_DEBUG);
 
 			// ファイルの移動
-			if (!@move_uploaded_file($file["tmp_name"], $dir . "/" . $uploadFile)){
+			if (!@move_uploaded_file($file['tmp_name'], $dir . "/" . $uploadFile)){
 				throw new RuntimeException('Failed to move uploaded file.');
 			}
 
