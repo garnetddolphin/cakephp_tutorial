@@ -42,7 +42,7 @@ class ArticlesTable extends Table
 	public function findTagged(Query $query, array $options)
 	{
 		$columns = [
-			'Articles.id', 'Articles.user_id','Articles.title','Articles.body','Articles.published','Articles.created','Articles.slug'
+			'Articles.id', 'Articles.user_id','Articles.title','Articles.body','Articles.file_name','Articles.published','Articles.created','Articles.slug'
 		];
 		$query = $query
 			->select($columns)
