@@ -41,7 +41,10 @@ class ArticlesController extends AppController
 			$this->log($this->request->getData(['file_name']), LOG_DEBUG);
 
 			// ファイルアップロード処理
+			$this->log(WWW_ROOT, LOG_DEBUG);
 			$dir = realpath(WWW_ROOT . "/upload_img");
+			$this->log($dir, LOG_DEBUG);
+
             $limitFileSize = 1024 * 1024;
             try {
                 $article['file_name'] = $this->file_upload($this->request->getData(['file_name']), $dir, $limitFileSize);
@@ -83,7 +86,7 @@ class ArticlesController extends AppController
 
 			if($this->Articles->save($article)){
 				$this->Flash->success(__('Your article has been updated.'));
-				// return $this->redirect(['action' => 'index']);
+				return $this->redirect(['action' => 'index']);
 			}
 			$this->Flash->error(__('Unable to update your article.'));
 		}
@@ -185,7 +188,7 @@ class ArticlesController extends AppController
 			}
 
 			// ファイル名の生成
-//            $uploadFile = $file["name"] . "." . $ext;
+			//$uploadFile = $file["name"] . "." . $ext;
 			$uploadFile = sha1_file($file["tmp_name"]) . "." . $ext;
 
 			// ファイルの移動
@@ -194,7 +197,7 @@ class ArticlesController extends AppController
 			}
 
 			// 処理を抜けたら正常終了
-//            echo 'File is uploaded successfully.';
+			//echo 'File is uploaded successfully.';
 
 		} catch (RuntimeException $e) {
 			throw $e;
