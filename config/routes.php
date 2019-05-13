@@ -31,4 +31,4 @@ Router::scope('/', function ($routes) {
     $routes->fallbacks();
 });
 
-Plugin::routes();
+//Plugin::routes();
