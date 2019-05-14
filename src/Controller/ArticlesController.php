@@ -156,18 +156,26 @@ $this->log(print_r($this->request->getData(['file_name']),true), LOG_DEBUG);
 	public function delete($slug)
 	{
 		$this->request->allowMethod(['post', 'delete']);
-
 		$article = $this->Articles->findBySlug($slug)->firstOrFail();
+		$dir = realpath(WWW_ROOT . "upload_img");
+		try {
+			$del_file = new File($dir . "/" . $article->file_name);
+			// ファイル削除処理実行
+			if($del_file->delete()){
+				$article['file_name'] = "";
+			} else {
+				throw new RuntimeException('ファイルの削除ができませんでした。');
+			}
+		} catch (RuntimeException $e) {
+				$this->log($e->getMessage(), LOG_DEBUG);
+				$this->log($article->file_name, LOG_DEBUG);
+		}
 		if($this->Articles->delete($article)){
 			$this->Flash->success(__('The {0} article has been deleted.', $article->title));
-			return $this->redirect(['action' => 'index']);
+		} else {
+			$this->Flash->error(__('The article could not be deleted. Please try again.'));
 		}
-	}
-	public function delete_file($id = null){
-		$this->request->allowMethod(['post', 'delete']);
-		$article = $this->Articles->get($id);
-		$this->log('=============$article===========',LOG_DEBUG);
-		$this->log($article,LOG_DEBUG);
+		return $this->redirect(['action' => 'index']);
 	}
 
 	public function tags()
