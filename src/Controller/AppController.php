@@ -37,7 +37,7 @@ class AppController extends Controller
         $this->loadComponent('Flash');
         $this->loadComponent('Auth', [
             // この行を追加しました
-            'autorize' => 'Controller',
+            'authorize' => 'Controller',
             'authenticate' => [
                 'Form' => [
                     'fields' => [
