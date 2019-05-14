@@ -37,7 +37,7 @@ class AppController extends Controller
         $this->loadComponent('Flash');
         $this->loadComponent('Auth', [
             // この行を追加しました
-            'autorize' => 'Controller',
+            'authorize' => 'Controller',
             'authenticate' => [
                 'Form' => [
                     'fields' => [
@@ -59,7 +59,8 @@ class AppController extends Controller
         $this->Auth->allow(['display', 'view', 'index']);
     }
 
-    public function isAuthorized($user){
+    public function isAuthorized($user)
+    {
         // デフォルトでは、アクセスを拒否します。
         return false;
     }

@@ -62,6 +62,10 @@ class ArticlesTable extends Table
 		return $query->group(['Articles.id']);
 	}
 
+	public function isOwnedBy($article, $user){
+		return $this->field('id',array( 'id' => $article, 'user_id' => $user)) !== false;
+	}
+
 	protected function _buildTags($tagString){
 		// タグをトリミング
 		$newTags = array_map('trim', explode(',', $tagString));
