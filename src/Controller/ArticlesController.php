@@ -47,6 +47,7 @@ class ArticlesController extends AppController
 
             $limitFileSize = 1024 * 1024;
             try {
+            	$this->log($this->request->getData(), LOG_DEBUG);
                 $article['file_name'] = $this->file_upload($this->request->getData(['file_name']), $dir, $limitFileSize);
             } catch (RuntimeException $e){
                 $this->Flash->error(__('ファイルのアップロードができませんでした.'));
@@ -62,33 +63,92 @@ class ArticlesController extends AppController
 		$this->set('article',$article);
 	}
 
-	public function edit($slug)
+	public function edit($slug,$id=null)
 	{
 		$article = $this->Articles->
 			findBySlug($slug)
 			->contain('Tags')  //関連付けられた Tags を読み込む
 			->firstOrFail();
+		// $this->log('============$article============'."\n", LOG_DEBUG);
+		// $this->log($article, LOG_DEBUG);
 
-		if($this->request->is(['post', 'put']))
+
+		if($this->request->is(['patch','post', 'put']))
 		{
-			$this->Articles->patchEntity($article,$this->request->getData(),[
+// $this->log('====$article====', LOG_DEBUG);
+// $this->log(print_r($article,true), LOG_DEBUG);
+// $this->log(print_r($article['id'],true), LOG_DEBUG);
+// $this->log('====getData()====', LOG_DEBUG);
+// $this->log(print_r($this->request->getData(),true), LOG_DEBUG);
+$this->log('====getData(['. 'file_name'.'])====', LOG_DEBUG);
+$this->log(print_r($this->request->getData(['file_name']),true), LOG_DEBUG);
+			 $this->Articles->patchEntity($article,$this->request->getData(),[
 				'accessibleFields' => ['user_id' => false]
 			]);
+
 			// ファイルのアップロード処理
 			$dir = realpath(WWW_ROOT . "/upload_img");
-            $limitFileSize = 1024 * 1024;
-            try {
-                $article['file_name'] = $this->file_upload($this->request->data['file_name'], $dir, $limitFileSize);
-            } catch (RuntimeException $e){
-                $this->Flash->error(__('ファイルのアップロードができませんでした.'));
-                $this->Flash->error(__($e->getMessage()));
-            }
 
+			// deleteボタンがクリックされたとき
+			if(isset($this->request->data['file_delete'])){
+				try {
+					$del_file = new File($dir . "/". $this->request->data["file_before"]);
+					// ファイル削除処理実行
+					// 成功する $del_file->delete();
+					if($del_file->delete()){
+						$article['file_name'] = "";
+					} else {
+						$article['file_name'] = $this->request->data['file_before'];
+						throw new Exception("ファイルの削除ができませんでした。");
+					}
+				} catch(RuntimeException $e){
+					$this->Flash->error(__($e->getMessage()));
+				}
+			} else {
+				// ファイルが入力されたとき
+				if($this->request->getData(['file_name'])){
+					$limitFileSize = 1024 * 1024;
+					try {
+						$article['file_name'] = $this->file_upload($this->request->getData(['file_name']), $dir, $limitFileSize);
+						// ファイル更新の場合は古いファイルは削除
+						if(isset($this->request->data['file_before'])){
+							// ファイル名が同じ場合は削除を実行しない
+							if($this->request->data['file_before'] != $article['file_name']){
+								$del_file = new File($dir . "/" . $this->request->data["file_before"]);
+								$this->log('==========$del_file==========',LOG_DEBUG);
+								$this->log($del_file,LOG_DEBUG);
+								if(!$del_file->delete()){
+									$this->log("ファイル更新時に下記ファイルが削除できませんでした。", LOG_DEBUG);
+									$this->log($this->request->data['"file_before'],LOG_DEBUG);
+								}
+							}
+						}
+					} catch (RuntimeException $e) {
+						// アップロード失敗時、既に登録ファイルが有る場合はそれを保持
+						if(isset($this->request->data['file_before'])){
+							$article['file_name'] = $this->request->data["file_before"];
+						}
+						$this->Flash->error(__("ファイルのアップロードができませんでした。"));
+						$this->Flash->error(__($e->getMessage()));
+					}
+				} else {
+					// ファイルは入力されていないけど登録されているファイルが有るとき
+					if(isset($this->request->data["file_before"])){
+						$article['file_name'] = $this->request->data['file_before'];
+					}
+				}
+			}
 			if($this->Articles->save($article)){
 				$this->Flash->success(__('Your article has been updated.'));
-				return $this->redirect(['action' => 'index']);
+				if(isset($this->request->data["file_delete"])){
+					$this->set(compact('article'));
+					 return $this->redirect(['action' => 'edit', $article['slug']]);
+				} else {
+					 return $this->redirect(['action' => 'index']);
+				}
+			} else {
+				$this->Flash->error(__('Unable to update your article.'));
 			}
-			$this->Flash->error(__('Unable to update your article.'));
 		}
 		$this->set('article', $article);
 	}
@@ -102,6 +162,12 @@ class ArticlesController extends AppController
 			$this->Flash->success(__('The {0} article has been deleted.', $article->title));
 			return $this->redirect(['action' => 'index']);
 		}
+	}
+	public function delete_file($id = null){
+		$this->request->allowMethod(['post', 'delete']);
+		$article = $this->Articles->get($id);
+		$this->log('=============$article===========',LOG_DEBUG);
+		$this->log($article,LOG_DEBUG);
 	}
 
 	public function tags()
@@ -140,6 +206,7 @@ class ArticlesController extends AppController
 	}
 
 	public function file_upload ($file = null,$dir = null, $limitFileSize = 1024 * 1024){
+		$this->log("file_upload function now.", LOG_DEBUG);
 		try {
 			// ファイルを保存するフォルダ $dirの値のチェック
 			if ($dir){
@@ -152,8 +219,8 @@ class ArticlesController extends AppController
 
 			// 未定義、複数ファイル、破損攻撃のいずれかの場合は無効処理
 			if (!isset($file['error']) || is_array($file['error'])){
-				throw new RuntimeException('Invalid parameters.');
-			}
+                throw new RuntimeException('Invalid parameters.');
+            }
 
 			// エラーのチェック
 			switch ($file['error']) {
@@ -189,15 +256,7 @@ class ArticlesController extends AppController
 
 			// ファイル名の生成
 			//$uploadFile = $file["name"] . "." . $ext;
-			$this->log("==============================", LOG_DEBUG);
-			$this->log($file, LOG_DEBUG);
-			$this->log("==============================", LOG_DEBUG);
 			$uploadFile = $file['name'];
-			$this->log($uploadFile, LOG_DEBUG);
-			$this->log("==============================", LOG_DEBUG);
-			$this->log($dir, LOG_DEBUG);
-			$this->log("==============================", LOG_DEBUG);
-			$this->log($dir . "/" . $uploadFile, LOG_DEBUG);
 
 			// ファイルの移動
 			if (!@move_uploaded_file($file['tmp_name'], $dir . "/" . $uploadFile)){

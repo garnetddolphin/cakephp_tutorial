@@ -30,12 +30,14 @@ class ArticlesTable extends Table
 	{
 		$validator
 			// title
-			->allowEmptyString('title, false')
-			->minLength('title', 10)
+			->allowEmptyString('title', false)
+			->minLength('title', 3)
 			->maxLength('title', 255)
 			// body
 			->allowEmptyString('body', false)
-			->minLength('body', 10);
+			->minLength('body', 3)
+			// file
+			->allowEmptyString('file_name',true);
 		return $validator;
 	}
 
