@@ -7,6 +7,7 @@
 $this->log($article, LOG_DEBUG);
 // $this->log($article->file_name, LOG_DEBUG);
 	if($article->file_name){
+		echo '<img src="' . $this->Url->build('/upload_img/') . $article->file_name . '" alt="'. $article->file_name . '" width="256px">';
 		echo $this->Form->input('file_before', ["type" => 'hidden',
 												"value" => $article->file_name
 								]);
