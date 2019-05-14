@@ -116,17 +116,17 @@ class ArticlesController extends AppController
 						$article['file_name'] = $this->request->data['file_before'];
 					}
 				}
-			}
-			if($this->Articles->save($article)){
-				$this->Flash->success(__('Your article has been updated.'));
-				if(isset($this->request->data["file_delete"])){
-					$this->set(compact('article'));
-					 return $this->redirect(['action' => 'edit', $article['slug']]);
+				if($this->Articles->save($article)){
+					$this->Flash->success(__('Your article has been updated.'));
+					if(isset($this->request->data["file_delete"])){
+						$this->set(compact('article'));
+						 return $this->redirect(['action' => 'edit', $article['slug']]);
+					} else {
+						 return $this->redirect(['action' => 'index']);
+					}
 				} else {
-					 return $this->redirect(['action' => 'index']);
+					$this->Flash->error(__('Unable to update your article.'));
 				}
-			} else {
-				$this->Flash->error(__('Unable to update your article.'));
 			}
 		}
 		$this->set('article', $article);
