@@ -213,9 +213,7 @@ class ArticlesController extends AppController
 
     // 記事が現在のユーザーに属していることを確認します。
     $article = $this->Articles->findBySlug($slug)->first();
-    $this->log($article,LOG_DEBUG);
-    // $this->log($article->user_id === $user['id'],LOG_DEBUG);
-    // return $article->user_id === $user['id'];
+    return $article->user_id === $user['id'];
     // if(in_array($this->request->param('action'), ['edit', 'delete'])){
     // 	$articleId = (int)$this->request->params['pass'][0];
     // 	if($this->Article->isOwnedBy($articleId,$user['id'])){
