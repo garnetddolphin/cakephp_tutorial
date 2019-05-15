@@ -5,6 +5,7 @@ use Cake\View\Helper;
 use Cake\View\View;
 // 画像を返すimage()で使用
 use Cake\Http\Exception\NotFoundException;
+use Cake\Http\Response;
 /**
  * Image helper
  */
@@ -17,18 +18,17 @@ class ImageHelper extends Helper
 	 */
 	protected $_defaultConfig = [];
 
-	// return path
-	function Path($file){
-		$path = WWW_ROOT . "Applications/XAMPP/htdocs/cms/upload_img/" . $file;
+	// URL直打ちで見れない(Webrootから見えない)パスに
+	// 保存された画像のフルパスを返す。
+	function Return_Path($file){
+		$path = "/Applications/XAMPP/htdocs/ImageFolder/" . $file;
 		return $path;
 	}
 
-	// 画像を返す
-	function image($file){
-		$image = ROOT . "Applications/XAMPP/htdocs/cms/upload_img/" . $file;
-		if(!file_exists($image)){
-			throw new NotFoundException();
-		}
-		return new CakeResponse(array('type' => 'image/png', 'body' => readFile($image)));
-	}
+	// 画像を<img>タグでインラインイメージとして表示するために
+	// base64でエンコードして返す
+	function Base64_Image($path){
+    $base64_image = base64_encode(file_get_contents($path));
+    return $base64_image;
+  }
 }
