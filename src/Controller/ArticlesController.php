@@ -4,6 +4,7 @@ use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use RuntimeException;
 
+
 class ArticlesController extends AppController
 {
 	public function initialize()
@@ -50,10 +51,15 @@ class ArticlesController extends AppController
 			}
 			$this->Flash->error(__('Unable to add your article.'));
 		}
+
+		// タグのリストを取得
+		$tags = $this->Articles->Tags->find('list');
+
+		// ビューコンテキストにtagsをセット
+		$this->set('tags', $tags);
 		$this->set('article',$article);
 	}
 
-	// public function edit($slug,$id=null)
 	public function edit($slug)
 	{
 		$article = $this->Articles->
@@ -129,6 +135,11 @@ class ArticlesController extends AppController
 				}
 			}
 		}
+		// タグのリストを取得
+		$tags = $this->Articles->Tags->find('list');
+
+		// ビューコンテキストにtagsをセット
+		$this->set('tags', $tags);
 		$this->set('article', $article);
 	}
 

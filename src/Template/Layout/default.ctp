@@ -42,6 +42,13 @@ $cakeDescription = 'CakePHP: the rapid development php framework';
         </ul>
         <div class="top-bar-section">
             <ul class="right">
+                <?php if($this->request->getSession()->read('Auth.User.id')) {
+                    echo '<li>"' . $this->request->getSession()->read('Auth.User.email') . '" </li>';
+                    echo '<li><a href="' . '/users/logout' . '">ログアウト</a></li>';
+                } else {
+                    echo '<li><a href="' . '/users/login' . '">ログイン</a></li>';
+                }
+                ?>
                 <li><a target="_blank" href="https://book.cakephp.org/3.0/">Documentation</a></li>
                 <li><a target="_blank" href="https://api.cakephp.org/3.0/">API</a></li>
             </ul>
