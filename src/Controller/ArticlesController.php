@@ -36,10 +36,22 @@ class ArticlesController extends AppController
 			$article->user_id = $this->Auth->user('id');
 
 			// ファイルアップロード処理
-			$dir = realpath(WWW_ROOT . "/upload_img");
+			// /Applications/XAMPP/htdocs/ImageFolder/[user_id]/以下
+			// を確認して無ければディレクトリ作成
+			// あったらその配下に画像を保存する
+			$user_dir = '/Applications/XAMPP/htdocs/ImageFolder/' . $article['user_id'];
+			if(file_exists($user_dir)){
+				$this->log("exist", LOG_DEBUG);
+			} else {
+				$this->log("dont exist", LOG_DEBUG);
+				mkdir($user_dir,0777);
+			}
 			$limitFileSize = 1024 * 1024;
+			$this->log('getData([file_name])',LOG_DEBUG);
+			$this->log($this->request->getData(['file_name'])['name'],LOG_DEBUG);
 			try {
-				$article['file_name'] = $this->file_upload($this->request->getData(['file_name']), $dir, $limitFileSize);
+				$article['file_name'] = $this->request->getData(['file_name'])['name'];
+				$article['sha1_file_name'] = $this->file_upload($this->request->getData(['file_name']), $user_dir, $limitFileSize);
 			} catch (RuntimeException $e){
 				$this->Flash->error(__('ファイルのアップロードができませんでした.'));
 				$this->Flash->error(__($e->getMessage()));
@@ -74,13 +86,21 @@ class ArticlesController extends AppController
 				'accessibleFields' => ['user_id' => false]
 			]);
 
-			// ファイルのアップロード処理
-			$dir = realpath(WWW_ROOT . "/upload_img");
-
+			// ファイルアップロード処理
+			// /Applications/XAMPP/htdocs/ImageFolder/[user_id]/以下
+			// を確認して無ければディレクトリ作成
+			// あったらその配下に画像を保存する
+			$user_dir = '/Applications/XAMPP/htdocs/ImageFolder/' . $article['user_id'];
+			if(file_exists($user_dir)){
+				$this->log("exist", LOG_DEBUG);
+			} else {
+				$this->log("dont exist", LOG_DEBUG);
+				mkdir($user_dir,0777);
+			}
 			// deleteボタンがクリックされたとき
 			if(isset($this->request->data['file_delete'])){
 				try {
-					$del_file = new File($dir . "/". $this->request->data["file_before"]);
+					$del_file = $user_dir. $this->request->data["file_before"];
 					// ファイル削除処理実行
 					if($del_file->delete()){
 						$article['file_name'] = "";
@@ -96,12 +116,12 @@ class ArticlesController extends AppController
 				if($this->request->getData(['file_name'])){
 					$limitFileSize = 1024 * 1024;
 					try {
-						$article['file_name'] = $this->file_upload($this->request->getData(['file_name']), $dir, $limitFileSize);
+						$article['file_name'] = $this->file_upload($this->request->getData(['file_name']), $user_dir, $limitFileSize);
 						// ファイル更新の場合は古いファイルは削除
 						if(isset($this->request->data['file_before'])){
 							// ファイル名が同じ場合は削除を実行しない
 							if($this->request->data['file_before'] != $article['file_name']){
-								$del_file = new File($dir . "/" . $this->request->data["file_before"]);
+								$del_file = $user_dir . $this->request->data["file_before"];
 								if(!$del_file->delete()){
 									$this->log("ファイル更新時に下記ファイルが削除できませんでした。", LOG_DEBUG);
 									$this->log($this->request->data['"file_before'],LOG_DEBUG);
@@ -255,19 +275,51 @@ class ArticlesController extends AppController
 
 			// ファイル名の生成
 			//$uploadFile = $file["name"] . "." . $ext;
-			$uploadFile = $file['name'];
+			// $uploadFile = $file['name'];
 
-			// ファイルの移動
-			if (!@move_uploaded_file($file['tmp_name'], $dir . "/" . $uploadFile)){
-				throw new RuntimeException('Failed to move uploaded file.');
+			// tmpファイルのパスを取得
+			$tmpPath = $file['tmp_name'];
+			$this->log('$tmpPath',LOG_DEBUG);
+			$this->log($tmpPath,LOG_DEBUG);
+
+			// ファイルの拡張子を取得
+			$path_parts = pathinfo($file['name']);
+			$this->log('$path_parts',LOG_DEBUG);
+			$this->log($path_parts,LOG_DEBUG);
+
+			$extension = $path_parts['extension'];
+			$this->log('$extension',LOG_DEBUG);
+			$this->log($extension,LOG_DEBUG);
+
+
+			// 画像のデータをSHA-1でハッシュ化してファイル名を作る
+			$imgfilehash = hash_file("sha1", $tmpPath);
+			$this->log('$imgfilehash',LOG_DEBUG);
+			$this->log($imgfilehash,LOG_DEBUG);
+
+			$imgfile = $imgfilehash . "." . $extension;
+			$this->log('$imgfile',LOG_DEBUG);
+			$this->log($imgfile,LOG_DEBUG);
+
+
+
+			// 画像格納先のフルパスを生成
+			$imgfilepath = $dir. '/' .$imgfile;
+			$this->log('$imgfilepath',LOG_DEBUG);
+			$this->log($imgfilepath,LOG_DEBUG);
+
+			// 同じデータの画像が保存されているか確認
+			// されていたらmoveしない
+			if(!file_exists($imgfilepath)){
+				// ファイルの移動
+				if (!@move_uploaded_file($file['tmp_name'], $imgfilepath)){
+					throw new RuntimeException('Failed to move uploaded file.');
+				}
 			}
-
-			// 処理を抜けたら正常終了
-			//echo 'File is uploaded successfully.';
 
 		} catch (RuntimeException $e) {
 			throw $e;
 		}
-		return $uploadFile;
+		return $imgfile;
 	}
 }
