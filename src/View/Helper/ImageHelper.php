@@ -20,8 +20,9 @@ class ImageHelper extends Helper
 
 	// URL直打ちで見れない(Webrootから見えない)パスに
 	// 保存された画像のフルパスを返す。
-	function Return_Path($file){
-		$path = "/Applications/XAMPP/htdocs/ImageFolder/" . $file;
+	// function Return_Path($userid , $file){
+	function Return_Path($userid , $file){
+		$path = "/Applications/XAMPP/htdocs/ImageFolder/" . $userid . "/". $file;
 		return $path;
 	}
 

@@ -47,11 +47,11 @@ class ArticlesController extends AppController
 				mkdir($user_dir,0777);
 			}
 			$limitFileSize = 1024 * 1024;
-			$this->log('getData([file_name])',LOG_DEBUG);
-			$this->log($this->request->getData(['file_name'])['name'],LOG_DEBUG);
+// $this->log('getData([file_name])',LOG_DEBUG);
+// $this->log($this->request->getData(['file_name'])['name'],LOG_DEBUG);
 			try {
-				$this->log('$this->request->getData(['.'file_name'. '])[' .'name' . ']',LOG_DEBUG);
-				$this->log($this->request->getData(['file_name'])['name'],LOG_DEBUG);
+// $this->log('$this->request->getData(['.'file_name'. '])[' .'name' . ']',LOG_DEBUG);
+// $this->log($this->request->getData(['file_name'])['name'],LOG_DEBUG);
 				$article['file_name'] = $this->request->getData(['file_name'])['name'];
 				$article['sha1_file_name'] = $this->file_upload($this->request->getData(['file_name']), $user_dir, $limitFileSize);
 			} catch (RuntimeException $e){
@@ -80,106 +80,68 @@ class ArticlesController extends AppController
 			findBySlug($slug)
 			->contain('Tags')  //関連付けられた Tags を読み込む
 			->firstOrFail();
+$this->log('$article',LOG_DEBUG);
+$this->log($article,LOG_DEBUG);
 
 		if($this->request->is(['patch','post', 'put']))
 		{
+$this->log('$this->request->getData()',LOG_DEBUG);
+$this->log($this->request->getData(),LOG_DEBUG);
 			 $this->Articles->patchEntity($article,$this->request->getData(),[
 				// user_idの更新を無効化
 				'accessibleFields' => ['user_id' => false]
 			]);
 
-
-$this->log('post $article',LOG_DEBUG);
-$this->log($article,LOG_DEBUG);
-
-			// ファイルアップロード処理
-			// /Applications/XAMPP/htdocs/ImageFolder/[user_id]/以下
-			// を確認して無ければディレクトリ作成
-			// あったらその配下に画像を保存する
+			$article->user_id = $this->Auth->user('id');
 			$user_dir = '/Applications/XAMPP/htdocs/ImageFolder/' . $article['user_id'];
-			if(file_exists($user_dir)){
-				$this->log("exist", LOG_DEBUG);
-			} else {
-				$this->log("dont exist", LOG_DEBUG);
-				mkdir($user_dir,0777);
-			}
 
-// deleteボタンがクリックされたとき
-// $this->log('$this->$article',LOG_DEBUG);
-// $this->log($this->$article,LOG_DEBUG);
-			if(isset($this->request->data['file_delete'])){
-				try {
-					// 間違い
-// $this->log('$article',LOG_DEBUG);
-// $this->log($article,LOG_DEBUG);
-					$del_file = new File($user_dir . "/" . $article['sha1_file_name']);
-// $this->log('$del_file', LOG_DEBUG);
-// $this->log($del_file, LOG_DEBUG);
-// $this->log('$del_file->delete()',LOG_DEBUG);
-					if($del_file->delete()){
-// $this->log('$article',LOG_DEBUG);
-// $this->log($article,LOG_DEBUG);
-						$article['file_name'] = "";
-						$article['sha1_file_name'] = "";
-$this->log('after delete() $article',LOG_DEBUG);
-$this->log($article,LOG_DEBUG);
-					} else {
-						$article['file_name'] = $this->request->data['file_before'];
-						throw new RuntimeException("ファイルの削除ができませんでした。");
-					}
-				} catch(RuntimeException $e){
-					$this->Flash->error(__($e->getMessage()));
-				}
-			} else {
-				// ファイルが入力されたとき
-// $this->log('$this->request->getData()',LOG_DEBUG);
-// $this->log($this->request->getData(),LOG_DEBUG);
-				if($this->request->getData(['file_name'])['tmp_name']){
-// $this->log("hogehoge", LOG_DEBUG);
-// if($this->request->getData(['file_name'])){
-					$limitFileSize = 1024 * 1024;
+			$sha1_file_path = $user_dir . "/" . $article['sha1_file_name'];
+			$sha1_file = new File($sha1_file_path);
+			$limitFileSize = 1024 * 1024;
+			$article['file_before'] = $article['file_name'];
+
+			// deleteある
+			// if(isset($this->request->getData()['file_delete']) || (!isset($this->request->getData()['file_delete'] && $this->request->getData()['file_name']['tmp_name']))){
+			if(isset($this->request->getData()['file_delete'])){
+				// delete処理
+				if(file_exists($sha1_file_path)){
 					try {
-						$article['sha1_file_name'] = $this->file_upload($this->request->getData(['file_name']), $user_dir, $limitFileSize);
-						// ファイル更新の場合は古いファイルは削除
-						if(isset($this->request->data['file_before'])){
-							// ファイル名が同じ場合は削除を実行しない
-							// if($this->request->data['file_before'] != $article['file_name']){
-							// 	$del_file = $user_dir . $this->request->data["file_before"];
-							// 	if(!$del_file->delete()){
-							// 		$this->log("ファイル更新時に下記ファイルが削除できませんでした。", LOG_DEBUG);
-							// 		$this->log($this->request->data['"file_before'],LOG_DEBUG);
-							// 	}
-							// }
+						if(!$sha1_file->delete()){
+							// $article['file_name'] = $this->request->data['file_before'];
+							throw new RuntimeException("ファイルの削除ができませんでした。");
 						}
-					} catch (RuntimeException $e) {
-						// アップロード失敗時、既に登録ファイルが有る場合はそれを保持
-						if(isset($this->request->data['file_before'])){
-							$article['file_name'] = $this->request->data["file_before"];
-						}
-						$this->Flash->error(__("ファイルのアップロードができませんでした。"));
+					} catch(RuntimeException $e){
 						$this->Flash->error(__($e->getMessage()));
 					}
-				} else {
-					// ファイルは入力されていないけど登録されているファイルが有るとき
-					if(isset($this->request->data["file_before"])){
-						$article['file_name'] = $this->request->data['file_before'];
-					}
-				}
-$this->log("before save", LOG_DEBUG);
-$this->log($article, LOG_DEBUG);
-				if($this->Articles->save($article)){
-$this->log("after save", LOG_DEBUG);
-$this->log($article, LOG_DEBUG);
-					$this->Flash->success(__('Your article has been updated.'));
-					if(isset($this->request->data["file_delete"])){
-						$this->set(compact('article'));
-						 return $this->redirect(['action' => 'edit', $article['slug']]);
+					if($this->request->getData()['file_name']['tmp_name']){
+						$article['file_name'] = $this->request->getData()['file_name']['name'];
+						$article['sha1_file_name'] = $this->file_upload($this->request->getData(['file_name']), $user_dir, $limitFileSize);
 					} else {
-						 return $this->redirect(['action' => 'index']);
+						$article['file_name'] = "";
+						$article['sha1_file_name'] = "";
 					}
-				} else {
-					$this->Flash->error(__('Unable to update your article.'));
 				}
+			}
+			// deleteない
+			else {
+				// データがある
+				if($this->request->getData()['file_name']['tmp_name']){
+					// 登録処理
+					$article['file_name'] = $this->request->getData()['file_name']['name'];
+					$article['sha1_file_name'] = $this->file_upload($this->request->getData(['file_name']), $user_dir, $limitFileSize);
+				}
+			}
+			$this->log($article,LOG_DEBUG);
+			// save
+			if($this->Articles->save($article)){
+				$this->Flash->success(__('Your article has been updated.'));
+				if(isset($this->request->data["file_delete"])){
+		// 						$this->set(compact('article'));
+				} else {
+					return $this->redirect(['action' => 'index']);
+				}
+			} else {
+				$this->Flash->error(__('Unable to update your article.'));
 			}
 		}
 		// タグのリストを取得
