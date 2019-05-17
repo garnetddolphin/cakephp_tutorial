@@ -50,6 +50,8 @@ class ArticlesController extends AppController
 			$this->log('getData([file_name])',LOG_DEBUG);
 			$this->log($this->request->getData(['file_name'])['name'],LOG_DEBUG);
 			try {
+				$this->log('$this->request->getData(['.'file_name'. '])[' .'name' . ']',LOG_DEBUG);
+				$this->log($this->request->getData(['file_name'])['name'],LOG_DEBUG);
 				$article['file_name'] = $this->request->getData(['file_name'])['name'];
 				$article['sha1_file_name'] = $this->file_upload($this->request->getData(['file_name']), $user_dir, $limitFileSize);
 			} catch (RuntimeException $e){
@@ -86,6 +88,10 @@ class ArticlesController extends AppController
 				'accessibleFields' => ['user_id' => false]
 			]);
 
+
+$this->log('post $article',LOG_DEBUG);
+$this->log($article,LOG_DEBUG);
+
 			// ファイルアップロード処理
 			// /Applications/XAMPP/htdocs/ImageFolder/[user_id]/以下
 			// を確認して無ければディレクトリ作成
@@ -97,13 +103,26 @@ class ArticlesController extends AppController
 				$this->log("dont exist", LOG_DEBUG);
 				mkdir($user_dir,0777);
 			}
-			// deleteボタンがクリックされたとき
+
+// deleteボタンがクリックされたとき
+// $this->log('$this->$article',LOG_DEBUG);
+// $this->log($this->$article,LOG_DEBUG);
 			if(isset($this->request->data['file_delete'])){
 				try {
-					$del_file = $user_dir. $this->request->data["file_before"];
-					// ファイル削除処理実行
+					// 間違い
+// $this->log('$article',LOG_DEBUG);
+// $this->log($article,LOG_DEBUG);
+					$del_file = new File($user_dir . "/" . $article['sha1_file_name']);
+// $this->log('$del_file', LOG_DEBUG);
+// $this->log($del_file, LOG_DEBUG);
+// $this->log('$del_file->delete()',LOG_DEBUG);
 					if($del_file->delete()){
+// $this->log('$article',LOG_DEBUG);
+// $this->log($article,LOG_DEBUG);
 						$article['file_name'] = "";
+						$article['sha1_file_name'] = "";
+$this->log('after delete() $article',LOG_DEBUG);
+$this->log($article,LOG_DEBUG);
 					} else {
 						$article['file_name'] = $this->request->data['file_before'];
 						throw new RuntimeException("ファイルの削除ができませんでした。");
@@ -113,20 +132,24 @@ class ArticlesController extends AppController
 				}
 			} else {
 				// ファイルが入力されたとき
-				if($this->request->getData(['file_name'])){
+// $this->log('$this->request->getData()',LOG_DEBUG);
+// $this->log($this->request->getData(),LOG_DEBUG);
+				if($this->request->getData(['file_name'])['tmp_name']){
+// $this->log("hogehoge", LOG_DEBUG);
+// if($this->request->getData(['file_name'])){
 					$limitFileSize = 1024 * 1024;
 					try {
-						$article['file_name'] = $this->file_upload($this->request->getData(['file_name']), $user_dir, $limitFileSize);
+						$article['sha1_file_name'] = $this->file_upload($this->request->getData(['file_name']), $user_dir, $limitFileSize);
 						// ファイル更新の場合は古いファイルは削除
 						if(isset($this->request->data['file_before'])){
 							// ファイル名が同じ場合は削除を実行しない
-							if($this->request->data['file_before'] != $article['file_name']){
-								$del_file = $user_dir . $this->request->data["file_before"];
-								if(!$del_file->delete()){
-									$this->log("ファイル更新時に下記ファイルが削除できませんでした。", LOG_DEBUG);
-									$this->log($this->request->data['"file_before'],LOG_DEBUG);
-								}
-							}
+							// if($this->request->data['file_before'] != $article['file_name']){
+							// 	$del_file = $user_dir . $this->request->data["file_before"];
+							// 	if(!$del_file->delete()){
+							// 		$this->log("ファイル更新時に下記ファイルが削除できませんでした。", LOG_DEBUG);
+							// 		$this->log($this->request->data['"file_before'],LOG_DEBUG);
+							// 	}
+							// }
 						}
 					} catch (RuntimeException $e) {
 						// アップロード失敗時、既に登録ファイルが有る場合はそれを保持
@@ -142,7 +165,11 @@ class ArticlesController extends AppController
 						$article['file_name'] = $this->request->data['file_before'];
 					}
 				}
+$this->log("before save", LOG_DEBUG);
+$this->log($article, LOG_DEBUG);
 				if($this->Articles->save($article)){
+$this->log("after save", LOG_DEBUG);
+$this->log($article, LOG_DEBUG);
 					$this->Flash->success(__('Your article has been updated.'));
 					if(isset($this->request->data["file_delete"])){
 						$this->set(compact('article'));
@@ -279,34 +306,34 @@ class ArticlesController extends AppController
 
 			// tmpファイルのパスを取得
 			$tmpPath = $file['tmp_name'];
-			$this->log('$tmpPath',LOG_DEBUG);
-			$this->log($tmpPath,LOG_DEBUG);
+// $this->log('$tmpPath',LOG_DEBUG);
+// $this->log($tmpPath,LOG_DEBUG);
 
 			// ファイルの拡張子を取得
 			$path_parts = pathinfo($file['name']);
-			$this->log('$path_parts',LOG_DEBUG);
-			$this->log($path_parts,LOG_DEBUG);
+// $this->log('$path_parts',LOG_DEBUG);
+// $this->log($path_parts,LOG_DEBUG);
 
 			$extension = $path_parts['extension'];
-			$this->log('$extension',LOG_DEBUG);
-			$this->log($extension,LOG_DEBUG);
+// $this->log('$extension',LOG_DEBUG);
+// $this->log($extension,LOG_DEBUG);
 
 
 			// 画像のデータをSHA-1でハッシュ化してファイル名を作る
 			$imgfilehash = hash_file("sha1", $tmpPath);
-			$this->log('$imgfilehash',LOG_DEBUG);
-			$this->log($imgfilehash,LOG_DEBUG);
+// $this->log('$imgfilehash',LOG_DEBUG);
+// $this->log($imgfilehash,LOG_DEBUG);
 
 			$imgfile = $imgfilehash . "." . $extension;
-			$this->log('$imgfile',LOG_DEBUG);
-			$this->log($imgfile,LOG_DEBUG);
+// $this->log('$imgfile',LOG_DEBUG);
+// $this->log($imgfile,LOG_DEBUG);
 
 
 
 			// 画像格納先のフルパスを生成
 			$imgfilepath = $dir. '/' .$imgfile;
-			$this->log('$imgfilepath',LOG_DEBUG);
-			$this->log($imgfilepath,LOG_DEBUG);
+// $this->log('$imgfilepath',LOG_DEBUG);
+// $this->log($imgfilepath,LOG_DEBUG);
 
 			// 同じデータの画像が保存されているか確認
 			// されていたらmoveしない
