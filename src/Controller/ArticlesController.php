@@ -282,7 +282,9 @@ $this->log($this->request->getData(),LOG_DEBUG);
 
 
 			// 画像のデータをSHA-1でハッシュ化してファイル名を作る
-			$imgfilehash = hash_file("sha1", $tmpPath);
+			// $imgfilehash = hash_file("sha1", $tmpPath);
+			// 推測されにくい一意なファイル名にする
+			$imgfilehash = sha1(uniqid(rand()));
 // $this->log('$imgfilehash',LOG_DEBUG);
 // $this->log($imgfilehash,LOG_DEBUG);
 
