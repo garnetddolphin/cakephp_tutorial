@@ -56,7 +56,9 @@ class AppController extends Controller
 
         // display アクションを許可して、PagesController が引き続き
         // 動作するようにします。また、読み取り専用のアクションを有効にします。
-        $this->Auth->allow(['display', 'view', 'index']);
+        // 記事を作成したユーザだけが表示できるようにする
+        // $this->Auth->allow(['display', 'view', 'index']);
+        $this->Auth->allow(['display', 'index']);
     }
 
     public function isAuthorized($user)
