@@ -108,6 +108,7 @@ class UsersController extends AppController
     {
         if ($this->request->is('post')) {
             $user = $this->Auth->identify();
+$this->log($user ,LOG_DEBUG);
             if ($user) {
                 $this->Auth->setUser($user);
                 return $this->redirect($this->Auth->redirectUrl());
@@ -124,6 +125,7 @@ class UsersController extends AppController
 
     public function logout()
     {
+        $this->request->session()->destroy();
         $this->Flash->success('ログアウトしました。');
         return $this->redirect($this->Auth->logout());
     }

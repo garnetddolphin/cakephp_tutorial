@@ -43,10 +43,14 @@ $cakeDescription = 'CakePHP: the rapid development php framework';
         <div class="top-bar-section">
             <ul class="right">
                 <?php if($this->request->getSession()->read('Auth.User.id')) {
+                    if($this->request->getSession()->read('Auth.User.role') == 'admin'){
+                        echo '<li>"' . "ADMIN" . '" </li>';
+                    }
+                    $this->log($this->request->getSession() ,LOG_DEBUG);
                     echo '<li>"' . $this->request->getSession()->read('Auth.User.email') . '" </li>';
-                    echo '<li><a href="' . '/users/logout' . '">ログアウト</a></li>';
+                    echo '<li><a href="' . '/cms/users/logout' . '">ログアウト</a></li>';
                 } else {
-                    echo '<li><a href="' . '/users/login' . '">ログイン</a></li>';
+                    echo '<li><a href="' . '/cms/users/login' . '">ログイン</a></li>';
                 }
                 ?>
                 <li><a target="_blank" href="https://book.cakephp.org/3.0/">Documentation</a></li>
