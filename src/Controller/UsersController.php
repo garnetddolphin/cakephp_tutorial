@@ -2,7 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
-
+use Cake\Event\Event;
 /**
  * Users Controller
  *
@@ -108,6 +108,7 @@ class UsersController extends AppController
     {
         if ($this->request->is('post')) {
             $user = $this->Auth->identify();
+$this->log($user ,LOG_DEBUG);
             if ($user) {
                 $this->Auth->setUser($user);
                 return $this->redirect($this->Auth->redirectUrl());
@@ -124,7 +125,35 @@ class UsersController extends AppController
 
     public function logout()
     {
+        $this->request->session()->destroy();
         $this->Flash->success('ログアウトしました。');
         return $this->redirect($this->Auth->logout());
+    }
+
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
+        $this->Auth->allow(['login']);
+        $this->Auth->allow(['logout']);
+        $this->Auth->allow(['add']);
+        $this->Auth->allow(['index']);
+        $this->Auth->allow(['view']);
+    }
+
+    public function isAuthorized($user)
+    {
+        $id = $this->request->getParam('pass.0');
+        $action = $this->request->getParam('action');
+
+        // 自分自身の編集と削除は許可
+        if($id == $user['id']){
+            return true;
+        }
+
+        // それ以外はロールがadminだったら許可
+        if($user['role'] == 'admin'){
+            return true;
+        }
+        return false;
     }
 }

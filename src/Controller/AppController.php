@@ -50,6 +50,14 @@ class AppController extends Controller
                 'controller' => 'Users',
                 'action' => 'login'
             ],
+            'loginRedirect' => [
+                'controller' => 'Users',
+                'action' => 'index'
+            ],
+            'logoutRedirect' => [
+                'controller' => 'Users',
+                'action' => 'login',
+            ],
             // 未認証の場合、直前のページに戻します
             'unauthorizedRedirect' => $this->referer()
         ]);
